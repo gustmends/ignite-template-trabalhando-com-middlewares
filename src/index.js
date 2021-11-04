@@ -10,19 +10,76 @@ app.use(cors());
 const users = [];
 
 function checksExistsUserAccount(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers;
+  const user = users.find(
+    user => user.username == username
+  );
+  if(!user){
+    return response.status(404).json({
+      error: "Should not be able to find a non existing user by username in header"
+    });
+  }
+  request.user = user;
+  next();
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
-  // Complete aqui
+  const { user } = request;
+  if(user.pro || (!user.pro && user.todos.length < 10)){
+    next();
+  } else {
+    return response.status(403).json({
+      error: "Should not be able to let user create a new todo when is not Pro and already have ten todos"
+    });
+  }
 }
 
 function checksTodoExists(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers;
+  const user = users.find(
+    user => user.username == username
+  );
+
+  if(!user){
+    return response.status(404).json({
+      error: "Should not be able to put user and todo in request when user does not exists"
+    });
+  }
+  
+  const { id } = request.params;
+  if(!validate(id)){
+    return response.status(400).json({
+      error: "Should not be able to put user and todo in request when todo id is not uuid"
+    });
+  }
+
+  const todo = user.todos.find(
+    todo => todo.id == id
+  );
+
+  if(!todo){
+    return response.status(404).json({
+      error: "Should not be able to put user and todo in request when todo does not exists"
+    });
+  }
+  
+  request.user = user;
+  request.todo = todo;
+  next();
 }
 
 function findUserById(request, response, next) {
-  // Complete aqui
+  const { id } = request.params;
+  const user = users.find(
+    user => user.id == id
+  );
+  if(!user){
+    return response.status(404).json({
+      error: "Should not be able to find a non existing user by username in header"
+    });
+  }
+  request.user = user;
+  next();
 }
 
 app.post('/users', (request, response) => {
